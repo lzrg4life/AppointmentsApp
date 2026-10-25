@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:AppointmentsApp.Models"
+             x:Class="AppointmentsApp.ArchivedAppointmentsPage"
+             Title="Archived appointments">
+    <Grid Padding="24" RowDefinitions="Auto,*" RowSpacing="16">
+        <Label Text="Archived appointments" Style="{StaticResource Headline}" />
+        <Grid Grid.Row="1">
+            <CollectionView x:Name="AppointmentsList">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:AppointmentModel">
+                        <Border Padding="16" Margin="0,0,0,10" Stroke="{StaticResource Gray200}">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8" />
+                            </Border.StrokeShape>
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding Title}" FontAttributes="Bold" FontSize="18" />
+                                <Label Text="{Binding AppointmentDate, StringFormat='{0:dddd, MMMM d, yyyy}'}" />
+                                <Label Text="{Binding AppointmentTime, StringFormat='{0:h:mm tt}'}" />
+                                <Label Text="{Binding Details}" IsVisible="{Binding HasDetails}" />
+                            </VerticalStackLayout>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+            <Label x:Name="EmptyStateLabel"
+                   Text="No archived appointments."
+                   HorizontalOptions="Center"
+                   VerticalOptions="Center"
+                   IsVisible="False" />
+        </Grid>
+    </Grid>
+</ContentPage>
