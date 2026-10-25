@@ -1,23 +1,63 @@
-﻿namespace AppointmentsApp;
+﻿using AppointmentsApp.Models;
+using AppointmentsApp.Services;
+using System.Text.Json;
+
+namespace AppointmentsApp;
 
 public partial class MainPage : ContentPage
 {
-    int count = 0;
+    private readonly AppointmentStorageService _storageService;
 
-    public MainPage()
+    public MainPage(AppointmentStorageService storageService)
     {
+        _storageService = storageService;
         InitializeComponent();
     }
 
-    private void OnCounterClicked(object? sender, EventArgs e)
+    protected override async void OnAppearing()
     {
-        count++;
+        base.OnAppearing();
+        await LoadAppointmentsAsync();
+    }
 
-        if (count == 1)
-            CounterBtn.Text = $"Clicked {count} time";
-        else
-            CounterBtn.Text = $"Clicked {count} times";
+    private async Task LoadAppointmentsAsync()
+    {
+        try
+        {
+            var appointments = await _storageService.GetAppointmentsAsync();
+            var activeAppointments = appointments
+                .Where(appointment => appointment.WhenArchived is null)
+                .OrderBy(appointment => appointment.AppointmentDate)
+                .ThenBy(appointment => appointment.AppointmentTime)
+                .ToList();
 
-        SemanticScreenReader.Announce(CounterBtn.Text);
+            AppointmentsList.ItemsSource = activeAppointments;
+            EmptyStateLabel.IsVisible = activeAppointments.Count == 0;
+        }
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException)
+        {
+            await DisplayAlertAsync("Unable to load appointments", ex.Message, "OK");
+        }
+    }
+
+    private async void OnAddAppointmentClicked(object? sender, EventArgs e)
+    {
+        await Navigation.PushAsync(new AppointmentEditPage(_storageService));
+    }
+
+    private async void OnArchivedAppointmentsClicked(object? sender, EventArgs e)
+    {
+        await Navigation.PushAsync(new ArchivedAppointmentsPage(_storageService));
+    }
+
+    private async void OnAppointmentSelected(object? sender, SelectionChangedEventArgs e)
+    {
+        if (e.CurrentSelection.FirstOrDefault() is not AppointmentModel appointment)
+        {
+            return;
+        }
+
+        AppointmentsList.SelectedItem = null;
+        await Navigation.PushAsync(new AppointmentEditPage(_storageService, appointment));
     }
 }
